@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domino Deluxe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #a7f3d0, #87d3f2, #c7a7f3); /* Pastel Premium Gradient */
+        }
+        .text-shadow-2xl {
+            text-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 15px rgba(0, 0, 0, 0.05);
+        }
+        .glassmorphic {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.15); /* Light glassmorphic */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 1.5rem; /* rounded-3xl equivalent */
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+        }
+        .button-gradient {
+            background: linear-gradient(135deg, #a7f3d0, #87d3f2);
+            transition: all 0.3s ease;
+        }
+        .button-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            filter: brightness(1.1);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 1s ease-out forwards;
+        }
+        .domino-piece-in-hand {
+            width: 70px;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease, outline 0.2s ease, opacity 0.5s ease;
+            border: 1px solid #ccc;
+        }
+        .domino-piece-in-hand:hover {
+            transform: translateY(-5px) scale(1.05);
+        }
+        .domino-piece-in-hand span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+        }
+        .domino-piece-in-hand hr {
+            width: 100%;
+            border-top: 1px solid #ddd;
+            margin: 4px 0;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-200 via-blue-200 to-purple-200 min-h-screen flex items-center justify-center">
+
+    <!-- Splash/Menu Inicial -->
+    <div id="mainMenu" class="absolute inset-0 flex-col items-center justify-center z-50 p-4 transition-opacity duration-1000 bg-gradient-to-br from-green-100 via-blue-100 to-purple-100 hidden">
+        <h1 class="text-7xl font-extrabold text-white text-shadow-2xl mb-12 animate-pulse" style="animation-duration: 2s;">Domino Deluxe</h1>
+        <div class="space-y-6">
+            <button id="startGameButton" class="w-80 px-8 py-4 text-3xl font-bold text-gray-800 rounded-3xl button-gradient shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300">
+                Iniciar Jogo
+            </button>
+            <button id="howToPlayButton" class="w-80 px-8 py-4 text-3xl font-bold text-gray-800 rounded-3xl button-gradient shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300">
+                Como Jogar
+            </button>
+            <button id="creditsButton" class="w-80 px-8 py-4 text-3xl font-bold text-gray-800 rounded-3xl button-gradient shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300">
+                Créditos
+            </button>
+        </div>
+    </div>
+
+    <!-- HUD de Alta Fidelidade (Visível durante o jogo) -->
+    <div id="gameHUD" class="absolute inset-0 z-40 p-6 flex flex-col justify-between hidden pointer-events-none">
+        <!-- Top HUD -->
+        <div class="flex justify-between items-start w-full">
+            <div class="glassmorphic p-4 rounded-3xl border border-white/30 shadow-2xl pointer-events-auto">
+                <p class="text-xl font-semibold text-white">Placar: <span id="scoreDisplay">0</span></p>
+            </div>
+            <div class="glassmorphic p-4 rounded-3xl border border-white/30 shadow-2xl pointer-events-auto">
+                <p class="text-xl font-semibold text-white">Rodada: <span id="roundDisplay">1</span></p>
+            </div>
+        </div>
+        <!-- Bottom HUD (Player Hand & Actions) -->
+        <div class="flex flex-col items-center w-full space-y-4">
+            <div id="turnIndicator" class="glassmorphic p-4 rounded-3xl border border-white/30 shadow-2xl text-2xl font-bold text-white mb-4 animate-pulse pointer-events-auto hidden">
+                Sua Vez!
+            </div>
+            <div id="playerHandContainer" class="glassmorphic p-4 rounded-3xl border border-white/30 shadow-2xl flex justify-center flex-wrap gap-4 pointer-events-auto" style="min-height: 120px;">
+                <!-- Domino pieces will be dynamically added here by JS -->
+            </div>
+            <button id="drawButton" class="px-6 py-3 text-lg font-bold text-gray-800 rounded-full button-gradient shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 pointer-events-auto hidden">
+                Comprar Peça
+            </button>
+        </div>
+    </div>
+
+    <!-- Container para o jogo Phaser -->
+    <div id="phaser-game" class="absolute inset-0 z-30"></div>
+
+    <!-- Game Over / Vitória Screen -->
+    <div id="gameOverScreen" class="absolute inset-0 bg-black/50 flex-col items-center justify-center z-50 p-4 hidden transition-opacity duration-1000">
+        <div class="glassmorphic p-12 rounded-3xl border border-white/30 shadow-2xl text-center space-y-8 animate-fade-in" style="animation-duration: 1s;">
+            <h2 id="gameOverTitle" class="text-6xl font-extrabold text-white text-shadow-2xl"></h2>
+            <p id="finalScoreDisplay" class="text-3xl font-semibold text-white">Pontuação Final: 0</p>
+            <div class="space-y-4">
+                <button id="tryAgainButton" class="w-64 px-6 py-3 text-2xl font-bold text-gray-800 rounded-3xl button-gradient shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300">
+                    Tentar Novamente
+                </button>
+                <button id="backToMenuButton" class="w-64 px-6 py-3 text-2xl font-bold text-gray-800 rounded-3xl button-gradient shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300">
+                    Menu Principal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Variáveis Globais de UI ---
+        const mainMenu = document.getElementById('mainMenu');
+        const startGameButton = document.getElementById('startGameButton');
+        const howToPlayButton = document.getElementById('howToPlayButton');
+        const creditsButton = document.getElementById('creditsButton');
+
+        const gameHUD = document.getElementById('gameHUD');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const roundDisplay = document.getElementById('roundDisplay');
+        const turnIndicator = document.getElementById('turnIndicator');
+        const playerHandContainer = document.getElementById('playerHandContainer');
+        const drawButton = document.getElementById('drawButton');
+
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const gameOverTitle = document.getElementById('gameOverTitle');
+        const finalScoreDisplay = document.getElementById('finalScoreDisplay');
+        const tryAgainButton = document.getElementById('tryAgainButton');
+        const backToMenuButton = document.getElementById('backToMenuButton');
+
+        // --- Funções de Controle de UI ---
+        function showMainMenu() {
+            mainMenu.classList.remove('hidden');
+            mainMenu.classList.add('flex');
+            gameHUD.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            if (gameInstance) {
+                gameInstance.destroy(true);
+                gameInstance = null;
+            }
+        }
+
+        function showGame() {
+            mainMenu.classList.add('hidden');
+            gameHUD.classList.remove('hidden');
+            gameHUD.classList.add('flex');
+            gameOverScreen.classList.add('hidden');
+            if (!gameInstance) {
+                gameInstance = new Phaser.Game(config);
+            } else if (gameInstance.scene.isActive('DominoScene')) {
+                gameInstance.scene.getScene('DominoScene').startGame(); // Restart game if already active
+            }
+        }
+
+        function showGameOver(title, score) {
+            mainMenu.classList.add('hidden');
+            gameHUD.classList.add('hidden');
+            gameOverScreen.classList.remove('hidden');
+            gameOverScreen.classList.add('flex');
+            gameOverTitle.textContent = title;
+            finalScoreDisplay.textContent = `Pontuação Final: ${score}`;
+            const phaserCanvas = document.getElementById('phaser-game').querySelector('canvas');
+            if (phaserCanvas) {
+                phaserCanvas.style.filter = 'blur(5px)';
+            }
+        }
+
+        function hideGameOver() {
+            gameOverScreen.classList.add('hidden');
+            gameOverScreen.classList.remove('flex');
+            const phaserCanvas = document.getElementById('phaser-game').querySelector('canvas');
+            if (phaserCanvas) {
+                phaserCanvas.style.filter = 'none';
+            }
+        }
+
+        // --- Event Listeners dos Botões ---
+        startGameButton.addEventListener('click', () => {
+            showGame();
+        });
+
+        howToPlayButton.addEventListener('click', () => {
+            alert('Regras do Dominó:\n\n1. O objetivo é ser o primeiro a se livrar de todas as suas peças.\n2. Combine uma das pontas da sua peça com uma das pontas da sequência de peças na mesa.\n3. Se não puder jogar, você deve "Comprar Peça" do monte (se houver).\n4. Se você não puder jogar e não houver peças para comprar, você passa a vez.\n5. O jogo termina quando um jogador joga sua última peça ou quando ninguém pode fazer um movimento (jogo bloqueado).\n6. O jogador com menos pontos nas peças restantes na mão vence a rodada.');
+        });
+
+        creditsButton.addEventListener('click', () => {
+            alert('Domino Deluxe\n\nDireção de Arte UI/UX e Game Development por:\nEquipe AAA Elite');
+        });
+
+        tryAgainButton.addEventListener('click', () => {
+            hideGameOver();
+            showGame();
+        });
+
+        backToMenuButton.addEventListener('click', showMainMenu);
+
+        // --- Configuração e Lógica do Jogo Phaser ---
+        let gameInstance = null; // Para controlar a instância do Phaser
+
+        class DominoPiece {
+            constructor(value1, value2) {
+                this.values = [Math.min(value1, value2), Math.max(value1, value2)]; // Standardized order
+                this.id = `${this.values[0]}-${this.values[1]}`;
+            }
+
+            isDouble() {
+                return this.values[0] === this.values[1];
+            }
+
+            matches(endValue) {
+                return this.values[0] === endValue || this.values[1] === endValue;
+            }
+
+            // Returns the other value of the piece when played against a specific endValue
+            getConnectingValue(playedAgainstValue) {
+                if (this.values[0] === playedAgainstValue) return this.values[1];
+                if (this.values[1] === playedAgainstValue) return this.values[0];
+                return -1; // Should not happen if matches() was true
+            }
+
+            toString() {
+                return `[${this.values[0]}|${this.values[1]}]`;
+            }
+        }
+
+        class DominoScene extends Phaser.Scene {
+            constructor() {
+                super('DominoScene');
+                this.deck = [];
+                this.playerHand = [];
+                this.aiHand = [];
+                this.boneyard = [];
+                this.board = []; // Stores objects { piece: DominoPiece, visual: Phaser.GameObject }
+                this.currentBoardEnds = [-1, -1]; // [leftEnd, rightEnd]
+                this.isPlayerTurn = true;
+                this.selectedPiece = null; // { piece: DominoPiece, index: number, visual: HTMLElement }
+                this.playerScore = 0;
+                this.roundNumber = 1;
+                this.playerPassed = false;
+                this.aiPassed = false;
+                this.inputEnabled = false;
+            }
+
+            preload() {
+                // No assets to load, drawing dominoes dynamically
+            }
+
+            create() {
+                this.add.rectangle(this.sys.game.config.width / 2, this.sys.game.config.height / 2,
+                                   this.sys.game.config.width, this.sys.game.config.height, 0xADD8E6)
+                                   .setOrigin(0.5);
+
+                this.leftEndZone = this.add.rectangle(150, this.sys.game.config.height / 2, 100, 150, 0x000000, 0.1)
+                                         .setInteractive()
+                                         .setName('leftEndZone')
+                                         .on('pointerover', () => this.leftEndZone.fillAlpha = 0.3)
+                                         .on('pointerout', () => this.leftEndZone.fillAlpha = 0.1)
+                                         .setDepth(1);
+                this.rightEndZone = this.add.rectangle(this.sys.game.config.width - 150, this.sys.game.config.height / 2, 100, 150, 0x000000, 0.1)
+                                          .setInteractive()
+                                          .setName('rightEndZone')
+                                          .on('pointerover', () => this.rightEndZone.fillAlpha = 0.3)
+                                          .on('pointerout', () => this.rightEndZone.fillAlpha = 0.1)
+                                          .setDepth(1);
+                
+                this.input.on('gameobjectdown', this.handleBoardInteraction, this);
+                drawButton.addEventListener('click', () => this.playerDrawPiece());
+
+                this.startGame();
+            }
+
+            startGame() {
+                this.resetGame();
+                this.createDeck();
+                this.shuffleDeck();
+                this.dealHands();
+                this.findStartingPlayer();
+                this.updateHUD();
+                this.drawPlayerHand();
+                this.displayTurnIndicator();
+                this.inputEnabled = true;
+
+                const phaserCanvas = document.getElementById('phaser-game').querySelector('canvas');
+                if (phaserCanvas) {
+                    phaserCanvas.style.filter = 'none';
+                }
+
+                // If AI starts, trigger AI move
+                if (!this.isPlayerTurn) {
+                    this.time.delayedCall(1000, this.aiMakeMove, [], this);
+                }
+            }
+
+            resetGame() {
+                this.deck = [];
+                this.playerHand = [];
+                this.aiHand = [];
+                this.boneyard = [];
+                
+                this.board.forEach(item => item.visual.destroy());
+                this.board = [];
+
+                this.currentBoardEnds = [-1, -1];
+                this.isPlayerTurn = true;
+                this.selectedPiece = null;
+                this.playerPassed = false;
+                this.aiPassed = false;
+                this.inputEnabled = false;
+                this.gameEnded = false;
+
+                while (playerHandContainer.firstChild) {
+                    playerHandContainer.removeChild(playerHandContainer.firstChild);
+                }
+                drawButton.classList.add('hidden');
+                turnIndicator.classList.add('hidden');
+            }
+
+            createDeck() {
+                for (let i = 0; i <= 6; i++) {
+                    for (let j = i; j <= 6; j++) {
+                        this.deck.push(new DominoPiece(i, j));
+                    }
+                }
+            }
+
+            shuffleDeck() {
+                for (let i = this.deck.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
+                }
+            }
+
+            dealHands() {
+                for (let i = 0; i < 7; i++) {
+                    this.playerHand.push(this.deck.pop());
+                    this.aiHand.push(this.deck.pop());
+                }
+                this.boneyard = [...this.deck];
+                this.deck = [];
+            }
+
+            findStartingPlayer() {
+                let highestDoublePlayer = null;
+                let highestDoubleValue = -1;
+                let highestPieceSumPlayer = null;
+                let highestPieceSumValue = -1;
+
+                [...this.playerHand, ...this.aiHand].forEach(piece => {
+                    const isPlayer = this.playerHand.includes(piece);
+                    if (piece.isDouble() && piece.values[0] > highestDoubleValue) {
+                        highestDoubleValue = piece.values[0];
+                        highestDoublePlayer = isPlayer ? 'player' : 'ai';
+                    }
+                    const sum = piece.values[0] + piece.values[1];
+                    if (sum > highestPieceSumValue) {
+                        highestPieceSumValue = sum;
+                        highestPieceSumPlayer = isPlayer ? 'player' : 'ai';
+                    }
+                });
+
+                if (highestDoublePlayer) {
+                    this.isPlayerTurn = (highestDoublePlayer === 'player');
+                } else {
+                    this.isPlayerTurn = (highestPieceSumPlayer === 'player');
+                }
+            }
+
+            updateHUD() {
+                scoreDisplay.textContent = this.playerScore;
+                roundDisplay.textContent = this.roundNumber;
+            }
+
+            displayTurnIndicator() {
+                turnIndicator.textContent = this.isPlayerTurn ? "Sua Vez!" : "Vez do Oponente!";
+                turnIndicator.classList.remove('hidden');
+                if (this.isPlayerTurn) {
+                    turnIndicator.classList.add('animate-pulse');
+                } else {
+                    turnIndicator.classList.remove('animate-pulse');
+                }
+            }
+
+            drawPlayerHand() {
+                while (playerHandContainer.firstChild) {
+                    playerHandContainer.removeChild(playerHandContainer.firstChild);
+                }
+
+                this.playerHand.forEach((piece, index) => {
+                    const pieceDiv = document.createElement('div');
+                    pieceDiv.className = 'domino-piece-in-hand';
+                    pieceDiv.innerHTML = `<span>${piece.values[0]}</span><hr><span class="text-2xl font-bold">${piece.values[1]}</span>`;
+                    pieceDiv.dataset.pieceId = piece.id;
+                    pieceDiv.dataset.index = index;
+
+                    pieceDiv.addEventListener('click', () => this.handlePlayerPieceSelection(piece, index, pieceDiv));
+                    playerHandContainer.appendChild(pieceDiv);
+                });
+            }
+
+            handlePlayerPieceSelection(piece, index, pieceDiv) {
+                if (!this.inputEnabled || !this.isPlayerTurn) return;
+
+                if (this.selectedPiece && this.selectedPiece.piece.id === piece.id) {
+                    this.selectedPiece.visual.style.outline = 'none';
+                    this.selectedPiece = null;
+                    return;
+                }
+
+                if (this.selectedPiece && this.selectedPiece.visual) {
+                    this.selectedPiece.visual.style.outline = 'none';
+                }
+
+                this.selectedPiece = { piece, index, visual: pieceDiv };
+                pieceDiv.style.outline = '3px solid #06b6d4';
+            }
+
+            handleBoardInteraction(pointer, gameObject) {
+                if (!this.inputEnabled || !this.isPlayerTurn || !this.selectedPiece) return;
+
+                const pieceToPlay = this.selectedPiece.piece;
+                const pieceVisualInHand = this.selectedPiece.visual;
+                
+                let played = false;
+                let endDirection = null;
+
+                if (this.board.length === 0) {
+                    endDirection = 'right'; // First piece determines ends
+                    this.playPlayerPiece(pieceToPlay, this.selectedPiece.index, endDirection, pieceVisualInHand);
+                    played = true;
+                } else if (gameObject.name === 'leftEndZone' && this.canPlay(pieceToPlay, this.currentBoardEnds[0])) {
+                    endDirection = 'left';
+                    this.playPlayerPiece(pieceToPlay, this.selectedPiece.index, endDirection, pieceVisualInHand);
+                    played = true;
+                } else if (gameObject.name === 'rightEndZone' && this.canPlay(pieceToPlay, this.currentBoardEnds[1])) {
+                    endDirection = 'right';
+                    this.playPlayerPiece(pieceToPlay, this.selectedPiece.index, endDirection, pieceVisualInHand);
+                    played = true;
+                } else if (gameObject.name && gameObject.name.includes('EndZone')) {
+                    alert("Movimento inválido! A peça não combina com essa ponta.");
+                }
+
+                if (this.selectedPiece && this.selectedPiece.visual) {
+                    this.selectedPiece.visual.style.outline = 'none';
+                }
+                this.selectedPiece = null;
+            }
+
+            playPlayerPiece(piece, index, endDirection, pieceVisualInHand) {
+                this.playerHand.splice(index, 1);
+                this.addPieceToBoard(piece, endDirection);
+
+                // Animate HTML piece removal
+                pieceVisualInHand.style.transform = 'translateY(-100px) scale(0.5)';
+                pieceVisualInHand.style.opacity = '0';
+                pieceVisualInHand.style.pointerEvents = 'none'; // Disable interaction during animation
+                this.time.delayedCall(500, () => {
+                    this.drawPlayerHand();
+                    this.checkGameEnd();
+                    if (!this.gameEnded) {
+                        this.nextTurn();
+                    }
+                });
+            }
+
+            addPieceToBoard(piece, end) {
+                const graphics = this.createDominoVisual(piece);
+                let actualPieceValues = [...piece.values];
+
+                if (this.board.length === 0) {
+                    this.currentBoardEnds = [...piece.values];
+                } else {
+                    let valueToMatch = (end === 'left') ? this.currentBoardEnds[0] : this.currentBoardEnds[1];
+                    if (piece.values[0] === valueToMatch) {
+                        if (end === 'left') this.currentBoardEnds[0] = piece.values[1];
+                        else this.currentBoardEnds[1] = piece.values[1];
+                    } else { // piece.values[1] === valueToMatch
+                        if (end === 'left') this.currentBoardEnds[0] = piece.values[0];
+                        else this.currentBoardEnds[1] = piece.values[0];
+                        // If values are swapped for placement, update internal representation for drawing
+                        actualPieceValues = [piece.values[1], piece.values[0]];
+                    }
+                }
+                
+                // Update text on the graphics object
+                graphics.getAt(1).setText(actualPieceValues[0]);
+                graphics.getAt(2).setText(actualPieceValues[1]);
+
+                if (end === 'left') {
+                    this.board.unshift({ piece: piece, visual: graphics });
+                } else {
+                    this.board.push({ piece: piece, visual: graphics });
+                }
+                
+                this.positionBoardPieces();
+            }
+
+            positionBoardPieces() {
+                if (this.board.length === 0) return;
+
+                const pieceWidth = 70;
+                const pieceHeight = 100;
+                const spacing = 10;
+                const totalPieceVisualWidth = pieceWidth + spacing;
+
+                let totalBoardVisualWidth = 0;
+                this.board.forEach(item => {
+                    totalBoardVisualWidth += item.piece.isDouble() ? pieceHeight + spacing : totalPieceVisualWidth;
+                });
+                totalBoardVisualWidth -= spacing; // Remove last spacing
+
+                let currentX = (this.sys.game.config.width / 2) - (totalBoardVisualWidth / 2); // Start X to center
+
+                this.board.forEach((boardItem, index) => {
+                    const visual = boardItem.visual;
+                    const piece = boardItem.piece;
+                    let rotation = 0;
+                    
+                    if (piece.isDouble()) {
+                        rotation = 90; // Rotate doubles
+                        visual.setSize(pieceHeight, pieceWidth); // Swap dimensions for double
+                        visual.setPosition(currentX + pieceHeight/2, this.sys.game.config.height / 2);
+                        currentX += pieceHeight + spacing;
+                    } else {
+                        visual.setSize(pieceWidth, pieceHeight); // Normal vertical dimensions
+                        visual.setPosition(currentX + pieceWidth/2, this.sys.game.config.height / 2);
+                        currentX += pieceWidth + spacing;
+                    }
+                    visual.setRotation(Phaser.Math.DegToRad(rotation));
+                });
+            }
+
+            createDominoVisual(dominoPiece) {
+                const graphics = this.add.graphics({ fillStyle: 0xFFFFFF, lineStyle: { width: 2, color: 0x333333 } });
+                
+                // Draw in base (vertical) orientation, container rotation will handle actual display
+                graphics.fillRoundedRect(-30, -45, 60, 90, 8);
+                graphics.strokeRoundedRect(-30, -45, 60, 90, 8);
+                graphics.lineBetween(-25, 0, 25, 0);
+
+                const textStyle = { fontSize: '24px', fill: '#333', fontFamily: 'Poppins' };
+                const text1 = this.add.text(0, -25, dominoPiece.values[0], textStyle).setOrigin(0.5);
+                const text2 = this.add.text(0, 25, dominoPiece.values[1], textStyle).setOrigin(0.5);
+
+                const container = this.add.container(0, 0, [graphics, text1, text2]);
+                container.setDepth(2);
+                return container;
+            }
+
+            canPlay(piece, boardEnd) {
+                if (this.board.length === 0) return true;
+                return piece.matches(boardEnd);
+            }
+
+            aiMakeMove() {
+                this.inputEnabled = false;
+                turnIndicator.textContent = "Vez do Oponente...";
+                turnIndicator.classList.add('animate-pulse');
+
+                this.time.delayedCall(1500, () => {
+                    let played = false;
+                    
+                    // AI plays the first valid piece it finds
+                    if (this.board.length === 0) {
+                        let bestPiece = null;
+                        let bestScore = -1;
+                        this.aiHand.forEach(p => {
+                            let score = p.isDouble() ? p.values[0] * 2 : p.values[0] + p.values[1];
+                            if (score > bestScore) {
+                                bestScore = score;
+                                bestPiece = p;
+                            }
+                        });
+                        if (bestPiece) {
+                            this.playAIPiece(bestPiece, 'right');
+                            played = true;
+                        }
+                    } else {
+                        for (let i = 0; i < this.aiHand.length; i++) {
+                            const piece = this.aiHand[i];
+                            if (this.canPlay(piece, this.currentBoardEnds[0])) {
+                                this.playAIPiece(piece, 'left');
+                                played = true;
+                                break;
+                            } else if (this.canPlay(piece, this.currentBoardEnds[1])) {
+                                this.playAIPiece(piece, 'right');
+                                played = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!played) {
+                        if (this.boneyard.length > 0) {
+                            alert("Oponente não tem jogadas, comprando peça...");
+                            this.drawAIPiece();
+                            this.time.delayedCall(1000, () => this.aiMakeMove()); // AI tries again after drawing
+                        } else {
+                            this.aiPassed = true;
+                            alert("Oponente não tem jogadas e não pode comprar! Passando a vez.");
+                            if (this.playerPassed && this.aiPassed) {
+                                this.endRoundBlocked();
+                            } else {
+                                this.nextTurn();
+                            }
+                        }
+                    } else {
+                        this.aiPassed = false;
+                        this.checkGameEnd();
+                        if (!this.gameEnded) {
+                            this.nextTurn();
+                        }
+                    }
+                });
+            }
+
+            playAIPiece(piece, endDirection) {
+                const index = this.aiHand.findIndex(p => p.id === piece.id);
+                if (index !== -1) {
+                    this.aiHand.splice(index, 1);
+                    this.addPieceToBoard(piece, endDirection);
+                }
+            }
+
+            drawAIPiece() {
+                if (this.boneyard.length > 0) {
+                    const piece = this.boneyard.pop();
+                    this.aiHand.push(piece);
+                }
+            }
+
+            checkGameEnd() {
+                this.gameEnded = false;
+                if (this.playerHand.length === 0) {
+                    this.gameEnded = true;
+                    this.playerScore += this.calculateHandPoints(this.aiHand);
+                    showGameOver("VITÓRIA!", this.playerScore);
+                } else if (this.aiHand.length === 0) {
+                    this.gameEnded = true;
+                    this.playerScore -= this.calculateHandPoints(this.playerHand);
+                    showGameOver("FIM DE JOGO!", this.playerScore);
+                }
+            }
+
+            endRoundBlocked() {
+                this.gameEnded = true;
+                const playerPoints = this.calculateHandPoints(this.playerHand);
+                const aiPoints = this.calculateHandPoints(this.aiHand);
+
+                if (playerPoints < aiPoints) {
+                    this.playerScore += aiPoints;
+                    showGameOver("VITÓRIA POR BLOQUEIO!", this.playerScore);
+                } else if (aiPoints < playerPoints) {
+                    this.playerScore -= playerPoints;
+                    showGameOver("FIM DE JOGO (BLOQUEADO)!", this.playerScore);
+                } else {
+                    showGameOver("EMPATE!", this.playerScore);
+                }
+            }
+
+            calculateHandPoints(hand) {
+                return hand.reduce((sum, piece) => sum + piece.values[0] + piece.values[1], 0);
+            }
+
+            canPlayerMakeMove() {
+                return this.playerHand.some(piece =>
+                    this.canPlay(piece, this.currentBoardEnds[0]) || this.canPlay(piece, this.currentBoardEnds[1]) || this.board.length === 0
+                );
+            }
+
+            playerDrawPiece() {
+                if (!this.inputEnabled || !this.isPlayerTurn) return;
+                
+                if (this.boneyard.length > 0) {
+                    const piece = this.boneyard.pop();
+                    this.playerHand.push(piece);
+                    this.drawPlayerHand();
+                    drawButton.classList.add('hidden');
+                    
+                    if (!this.canPlayerMakeMove()) {
+                        this.playerPassed = true;
+                        alert("Você comprou, mas ainda não tem jogadas! Passando a vez.");
+                        this.nextTurn();
+                    } else {
+                         alert("Você comprou uma peça. Agora tente jogar!");
+                    }
+                } else {
+                    alert("Não há mais peças para comprar!");
+                    this.playerPassed = true;
+                    this.nextTurn();
+                }
+            }
+
+            nextTurn() {
+                this.isPlayerTurn = !this.isPlayerTurn;
+                this.displayTurnIndicator();
+                drawButton.classList.add('hidden');
+                this.selectedPiece = null;
+
+                if (this.isPlayerTurn) {
+                    this.inputEnabled = true;
+                    this.aiPassed = false; // Reset AI pass state
+                    if (!this.canPlayerMakeMove()) {
+                        if (this.boneyard.length > 0) {
+                            drawButton.classList.remove('hidden');
+                        } else {
+                            this.playerPassed = true;
+                            alert("Você não tem jogadas e não pode comprar! Passando a vez.");
+                            if (this.playerPassed && this.aiPassed) {
+                                this.endRoundBlocked();
+                            } else {
+                                this.nextTurn();
+                            }
+                        }
+                    }
+                } else {
+                    this.inputEnabled = false;
+                    this.playerPassed = false; // Reset player pass state
+                    this.time.delayedCall(1000, this.aiMakeMove, [], this);
+                }
+            }
+        }
+
+        const config = {
+            type: Phaser.AUTO,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            parent: 'phaser-game',
+            scene: DominoScene,
+            scale: {
+                mode: Phaser.Scale.RESIZE,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            }
+        };
+
+        window.addEventListener('resize', () => {
+            if (gameInstance) {
+                gameInstance.scale.resize(window.innerWidth, window.innerHeight);
+                if (gameInstance.scene.isActive('DominoScene')) {
+                    gameInstance.scene.getScene('DominoScene').positionBoardPieces();
+                    // Also update drop zone positions relative to new size
+                    const scene = gameInstance.scene.getScene('DominoScene');
+                    scene.leftEndZone.setPosition(150, scene.sys.game.config.height / 2);
+                    scene.rightEndZone.setPosition(scene.sys.game.config.width - 150, scene.sys.game.config.height / 2);
+                }
+            }
+        });
+
+        showMainMenu();
+    </script>
+</body>
+</html>
