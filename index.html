@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criador de Apps com Duplo Motor v5.0</title>
+    <title>Criador de Apps Profissionais v3.0</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="container">
         <aside class="sidebar">
-            <h2>Criador de Apps Pro</h2>
+            <h2>Criador de Apps Premium</h2>
             
             <div class="api-key-container">
                 <label for="api-key-input">Chave API Gemini (AIzaSy...):</label>
@@ -18,8 +18,8 @@
             </div>
 
             <div class="input-container">
-                <label for="user-input">Sua Ideia Base:</label>
-                <textarea id="user-input" placeholder="Ex: uma calculadora, um app de tarefas, etc..."></textarea>
+                <label for="user-input">Descreva sua ideia ou alteração:</label>
+                <textarea id="user-input" placeholder="Ex: Crie um dashboard financeiro completo com gráficos e notificações de transações..."></textarea>
             </div>
             
             <button id="btn-generate">Processar Aplicativo</button>
@@ -27,27 +27,20 @@
             <hr class="divider">
 
             <div class="tabs">
-                <button id="tab-btn-prompt" class="nav-btn active" onclick="switchTab('prompt')">1. Prompt</button>
-                <button id="tab-btn-advanced" class="nav-btn" onclick="switchTab('advanced')">2. Avançado</button>
-                <button id="tab-btn-code" class="nav-btn" onclick="switchTab('code')">3. Código</button>
+                <button id="tab-btn-prompt" class="nav-btn active" onclick="switchTab('prompt')">Prompt Avançado</button>
+                <button id="tab-btn-code" class="nav-btn" onclick="switchTab('code')">Código Fonte</button>
             </div>
             
             <div id="tab-content-prompt" class="tab-content">
-                <textarea id="output-prompt" readonly placeholder="A IA gerará um prompt otimizado aqui primeiro..."></textarea>
+                <textarea id="output-prompt" readonly placeholder="O pipeline de engenharia de prompt aparecerá aqui..."></textarea>
             </div>
-
-            <div id="tab-content-advanced" class="tab-content" style="display:none;">
-                <textarea id="output-advanced" readonly placeholder="O Super-Prompt estruturado com regras comerciais aparecerá aqui..."></textarea>
-            </div>
-
             <div id="tab-content-code" class="tab-content" style="display:none;">
-                <textarea id="output-code" readonly placeholder="O código pronto para o preview aparecerá aqui..."></textarea>
+                <textarea id="output-code" readonly placeholder="O código de produção gerado aparecerá aqui..."></textarea>
             </div>
         </aside>
 
         <main class="preview-area">
             <div class="device-controls">
-                <span id="status-global-indicator" style="color: #a6e3a1; font-size: 0.85rem; font-weight: bold; margin-right: auto; padding-left: 10px;">Sistema pronto</span>
                 <button class="device-btn" onclick="changeDevice('mobile')">📱 Celular</button>
                 <button class="device-btn" onclick="changeDevice('tablet')">📟 Tablet</button>
                 <button class="device-btn" onclick="changeDevice('desktop')">💻 Desktop</button>
@@ -55,7 +48,7 @@
             </div>
 
             <div id="device-simulator" class="device-desktop">
-                <iframe id="app-preview" srcdoc="<div style='font-family:sans-serif; text-align:center; padding-top:120px; color:#a6adc8;'><h2>Aguardando Comando</h2><p>Insira a ideia do seu app e assista ao processo nas abas laterais.</p></div>"></iframe>
+                <iframe id="app-preview" srcdoc="<div style='font-family:sans-serif; text-align:center; padding-top:120px; color:#a6adc8;'><h2>Ambiente Pronto</h2><p>Insira suas instruções para iniciar a engenharia de código.</p></div>"></iframe>
             </div>
         </main>
     </div>
