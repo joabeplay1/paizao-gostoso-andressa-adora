@@ -18,9 +18,10 @@ body, html {
     width: 100vw;
 }
 
+/* Painel Lateral */
 .sidebar {
-    width: 395px;
-    min-width: 395px;
+    width: 390px;
+    min-width: 390px;
     background-color: #181825;
     padding: 20px;
     display: flex;
@@ -45,6 +46,7 @@ body, html {
 label {
     font-size: 0.8rem;
     color: #a6adc8;
+    font-weight: 500;
 }
 
 input[type="password"], textarea {
@@ -55,11 +57,17 @@ input[type="password"], textarea {
     border-radius: 8px;
     padding: 12px;
     outline: none;
+    transition: border-color 0.2s;
 }
 
 textarea {
-    height: 90px;
+    height: 120px;
     resize: none;
+    line-height: 1.4;
+}
+
+input:focus, textarea:focus {
+    border-color: #cba6f7;
 }
 
 #btn-generate {
@@ -72,23 +80,27 @@ textarea {
     font-weight: bold;
     font-size: 1rem;
     box-shadow: 0 4px 12px rgba(166, 227, 161, 0.2);
+    transition: transform 0.1s, background-color 0.2s;
 }
 
-#btn-generate:disabled {
-    background-color: #45475a;
-    color: #585b70;
-    cursor: not-allowed;
+#btn-generate:hover {
+    background-color: #94e2d5;
+}
+
+#btn-generate:active {
+    transform: scale(0.98);
 }
 
 .divider {
     border: 0;
     border-top: 1px solid #313244;
+    margin: 5px 0;
 }
 
 /* Abas */
 .tabs {
     display: flex;
-    gap: 4px;
+    gap: 5px;
     background-color: #11111b;
     padding: 4px;
     border-radius: 8px;
@@ -99,11 +111,12 @@ textarea {
     background: transparent;
     color: #a6adc8;
     border: none;
-    padding: 10px 4px;
+    padding: 10px;
     cursor: pointer;
     border-radius: 6px;
-    font-size: 0.78rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
 }
 
 .nav-btn.active {
@@ -118,17 +131,9 @@ textarea {
 
 .tab-content textarea {
     height: 100%;
-    font-family: monospace;
+    font-family: 'Fira Code', Monaco, monospace;
     font-size: 0.8rem;
     background-color: #11111b;
-    color: #94e2d5;
-}
-
-#output-advanced {
-    color: #f9e2af;
-}
-
-#output-code {
     color: #a6e3a1;
 }
 
@@ -144,25 +149,24 @@ textarea {
 
 .device-controls {
     display: flex;
-    width: 100%;
-    justify-content: flex-end;
     gap: 10px;
     margin-bottom: 15px;
     background-color: #181825;
-    padding: 8px 12px;
+    padding: 6px 12px;
     border-radius: 30px;
     border: 1px solid #313244;
-    align-items: center;
 }
 
 .device-btn {
     background-color: transparent;
     color: #cdd6f4;
     border: none;
-    padding: 6px 12px;
+    padding: 8px 16px;
     border-radius: 20px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
 }
 
 .device-btn:hover {
@@ -172,9 +176,14 @@ textarea {
 .btn-fullscreen {
     background-color: #f38ba8;
     color: #11111b;
-    font-weight: bold;
+    font-weight: 600;
 }
 
+.btn-fullscreen:hover {
+    background-color: #eba0ac;
+}
+
+/* Tamanhos de Tela */
 #device-simulator {
     background-color: #fff;
     box-shadow: 0 20px 50px rgba(0,0,0,0.6);
@@ -195,5 +204,5 @@ textarea {
 
 .close-fs-btn {
     position: fixed; top: 20px; right: 20px; z-index: 100000;
-    background: #f38ba8; color: #11111b; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;
+    background: #f38ba8; color: #11111b; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
 }
