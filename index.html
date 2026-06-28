@@ -3,143 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplicativo Igreja Viva</title>
+    <title>Criador Automático de Apps</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <div class="app-container">
-        <header class="app-header">
-            <div class="logo">
-                <i class="fa-solid fa-church"></i>
-                <span>Igreja Viva</span>
-            </div>
-            <button id="login-btn" class="login-btn"><i class="fa-solid fa-user"></i> Entrar</button>
-        </header>
-
-        <main class="app-content">
+    <div class="container">
+        <aside class="sidebar">
+            <h2>Criador de Apps v2.5</h2>
             
-            <section id="screen-home" class="app-screen active">
-                <div class="hero-banner">
-                    <h2>Bem-vindo à Comunidade</h2>
-                    <p>"O Senhor é o meu pastor, nada me faltará."</p>
-                </div>
-                <div class="quick-actions">
-                    <h3>Destaques da Semana</h3>
-                    <div class="card" onclick="switchTab('biblia')">
-                        <i class="fa-solid fa-book-open"></i>
-                        <div>
-                            <h4>Palavra do Dia</h4>
-                            <p>Leia o versículo de hoje e medite.</p>
-                        </div>
-                    </div>
-                    <div class="card" onclick="switchTab('louvores')">
-                        <i class="fa-solid fa-music"></i>
-                        <div>
-                            <h4>Playlist de Domingo</h4>
-                            <p>Ouça os louvores do último culto.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <div class="api-key-container">
+                <label for="api-key-input">Chave API Gemini (AIzaSy...):</label>
+                <input type="password" id="api-key-input" placeholder="Cole sua chave AI Studio aqui">
+            </div>
 
-            <section id="screen-biblia" class="app-screen">
-                <h2>Bíblia Sagrada Online</h2>
-                <div class="bible-selector">
-                    <select id="bible-book">
-                        <option value="salmos">Salmos</option>
-                        <option value="joao">João</option>
-                    </select>
-                    <select id="bible-chapter">
-                        <option value="1">Capítulo 1</option>
-                        <option value="23">Capítulo 23</option>
-                    </select>
-                </div>
-                <div id="bible-text" class="bible-text-container">
-                    </div>
-            </section>
+            <div class="input-container">
+                <label for="user-input">O que você quer criar ou alterar?</label>
+                <textarea id="user-input" placeholder="Ex: Crie um app de tarefas... ou depois: Mude o fundo para azul..."></textarea>
+            </div>
+            
+            <button id="btn-generate">Processar Aplicativo</button>
 
-            <section id="screen-louvores" class="app-screen">
-                <h2>Louvores & Adoração</h2>
-                <div class="music-list">
-                    <div class="music-item" onclick="playMusic('Grandes Coisas', 'Fernandinho')">
-                        <i class="fa-solid fa-play-circle"></i>
-                        <div class="music-info">
-                            <h4>Grandes Coisas</h4>
-                            <p>Fernandinho</p>
-                        </div>
-                    </div>
-                    <div class="music-item" onclick="playMusic('Lugar Secreto', 'Gabriela Rocha')">
-                        <i class="fa-solid fa-play-circle"></i>
-                        <div class="music-info">
-                            <h4>Lugar Secreto</h4>
-                            <p>Gabriela Rocha</p>
-                        </div>
-                    </div>
-                    <div class="music-item" onclick="playMusic('Bondade de Deus', 'Isaías Saad')">
-                        <i class="fa-solid fa-play-circle"></i>
-                        <div class="music-info">
-                            <h4>Bondade de Deus</h4>
-                            <p>Isaías Saad</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="player" class="player-container hidden">
-                    <div class="player-details">
-                        <i class="fa-solid fa-compact-disc fa-spin"></i>
-                        <div>
-                            <strong id="player-title">Música</strong>
-                            <p id="player-artist">Artista</p>
-                        </div>
-                    </div>
-                    <button onclick="togglePlay()"><i id="play-icon" class="fa-solid fa-pause"></i></button>
-                </div>
-            </section>
+            <hr class="divider">
 
-            <section id="screen-chat" class="app-screen">
-                <h2>Chat da Comunidade</h2>
-                <div id="chat-messages" class="chat-messages">
-                    <div class="message system">Bem-vindo ao chat de oração e comunhão!</div>
-                </div>
-                <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="Digite uma mensagem de fé...">
-                    <button id="chat-send"><i class="fa-solid fa-paper-plane"></i></button>
-                </div>
-            </section>
+            <div class="tabs">
+                <button id="tab-btn-prompt" class="nav-btn active" onclick="switchTab('prompt')">Prompt</button>
+                <button id="tab-btn-code" class="nav-btn" onclick="switchTab('code')">Código Fonte</button>
+            </div>
+            
+            <div id="tab-content-prompt" class="tab-content">
+                <textarea id="output-prompt" readonly placeholder="O prompt interno gerado aparecerá aqui..."></textarea>
+            </div>
+            <div id="tab-content-code" class="tab-content" style="display:none;">
+                <textarea id="output-code" readonly placeholder="O código HTML gerado aparecerá aqui..."></textarea>
+            </div>
+        </aside>
 
+        <main class="preview-area">
+            <div class="device-controls">
+                <button class="device-btn" onclick="changeDevice('mobile')">📱 Celular</button>
+                <button class="device-btn" onclick="changeDevice('tablet')">📟 Tablet</button>
+                <button class="device-btn" onclick="changeDevice('desktop')">💻 Desktop</button>
+                <button class="device-btn btn-fullscreen" onclick="toggleFullscreen()">📺 Tela Cheia</button>
+            </div>
+
+            <div id="device-simulator" class="device-desktop">
+                <iframe id="app-preview" srcdoc="<div style='font-family:sans-serif; text-align:center; padding-top:100px; color:#888;'><h2>Pronto para começar</h2><p>Digite sua ideia ao lado e clique em Processar.</p></div>"></iframe>
+            </div>
         </main>
-
-        <nav class="app-nav">
-            <button class="nav-btn active" onclick="switchTab('home')">
-                <i class="fa-solid fa-house"></i>
-                <span>Início</span>
-            </button>
-            <button class="nav-btn" onclick="switchTab('biblia')">
-                <i class="fa-solid fa-book-open"></i>
-                <span>Bíblia</span>
-            </button>
-            <button class="nav-btn" onclick="switchTab('louvores')">
-                <i class="fa-solid fa-music"></i>
-                <span>Louvores</span>
-            </button>
-            <button class="nav-btn" onclick="switchTab('chat')">
-                <i class="fa-solid fa-comments"></i>
-                <span>Chat</span>
-            </button>
-        </nav>
     </div>
 
-    <div id="login-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3>Entrar no App</h3>
-            <input type="email" placeholder="E-mail">
-            <input type="password" placeholder="Senha">
-            <button onclick="closeLogin()">Entrar</button>
-            <button class="close-modal" onclick="closeLogin()">Cancelar</button>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
