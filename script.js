@@ -10,14 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('btn-generate').addEventListener('click', async () => {
     const geminiKey = document.getElementById('api-key-input').value.trim();
     const userInput = document.getElementById('user-input').value.trim();
-    const statusIndicator = document.getElementById('status-global-indicator');
 
     if (!geminiKey || geminiKey.startsWith("http")) {
-        alert("Erro: Insira uma chave de API válida do Gemini (AIzaSy...).");
+        alert("Erro: Insira uma chave de API válida do Gemini (Ex: AIzaSy...).");
         return;
     }
     if (!userInput) {
-        alert("Por favor, digite sua ideia base.");
+        alert("Por favor, digite uma instrução para criar ou alterar o app.");
         return;
     }
 
@@ -25,99 +24,72 @@ document.getElementById('btn-generate').addEventListener('click', async () => {
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
     
     const btn = document.getElementById('btn-generate');
+    btn.innerText = "Pensando e Revisando... ⏳";
     btn.disabled = true;
 
+    // INJEÇÃO DAS 12 REGRAS DE SOFTWARE COMERCIAL DIRETAMENTE NO PROMPT INTERNO
+    let instrucoesAvançadas = `
+    Aja como um Engenheiro de Software Sênior e Especialista em UX/UI das maiores Big Techs (Google, Apple, Notion, Figma).
+    
+    SIGA OBRIGATORIAMENTE ESTE PROCESSO MENTAL ANTES DE DEVOLVER O CÓDIGO:
+    1. Entenda perfeitamente o pedido do usuário.
+    2. Planeje toda a arquitetura interna de software.
+    3. Escolha os melhores componentes interativos.
+    4. Projete um layout moderno baseado em Visual Hierarchy, Spacing equilibrado, White Space elegante, Microinterações e Motion Design premium (estilo Apple Human Interface e Glass UI).
+    5. Crie soluções modulares separando a lógica internamente mesmo em arquivo único: [Config, Utils, Components, Services, State, Events, UI, Storage].
+    6. SEMPRE implemente componentes Premium funcionais se fizerem sentido para a experiência: Toasts dinâmicos, Modais, Dialogs, Dropdowns, Tooltips, Accordions, Skeletons de carregamento ou filtros avançados.
+    7. REGRA ABSOLUTA: Não use soluções improvisadas, placeholders ou dados fictícios estáticos desnecessários. Tudo deve funcionar de verdade em nível de produção (botões, lógicas, submissões e persistências).
+    8. Aplique Clean Code rígido: Nomes de variáveis explícitos, sem código morto e sem duplicação de CSS/JS.
+    9. SISTEMA DE AUTOCORREÇÃO: Antes de finalizar, faça uma varredura interna e revise procurando por bugs, IDs quebrados, erros de console, falhas de responsividade em dispositivos móveis ou problemas de acessibilidade. Corrija tudo internamente.
+    10. Devolva UNICAMENTE o código final purificado dentro de um bloco de código markdown \`\`\`html, sem textos conversacionais fora dele.
+    `;
+
+    let promptFinal = "";
+    if (codigoAtual === "") {
+        // Fluxo Inicial
+        promptFinal = `${instrucoesAvançadas}\n\nTarefa: Crie um aplicativo web inovador do zero baseado em: "${userInput}".`;
+    } else {
+        // Fluxo de Atualização / Manutenção Dinâmica
+        promptFinal = `${instrucoesAvançadas}\n\nCódigo de produção atual:\n\`\`\`html\n${codigoAtual}\n\`\`\`\n\nTarefa: Modifique ou acrescente novas camadas profissionais a este código respeitando a base existente para realizar este pedido: "${userInput}". Não envie trechos soltos, refaça o arquivo HTML completo contendo as mudanças aplicadas e revisadas.`;
+    }
+
+    // ETAPA 1: Mostra o Prompt Avançado gerado na aba lateral automaticamente
+    document.getElementById('output-prompt').value = promptFinal;
+    switchTab('prompt');
+
     try {
-        // ==========================================================
-        // MOTOR 1: GERAR O PROMPT BÁSICO / OTIMIZADO DA IDEIA
-        // ==========================================================
-        btn.innerText = "Criando Prompt... ⚙️";
-        statusIndicator.innerText = "Fase 1: Expandindo a ideia do usuário...";
-        switchTab('prompt');
-
-        const promptInstrucaoM1 = `Você é um Engenheiro de Prompt. Pegue a ideia simples do usuário: "${userInput}" e expanda em um escopo técnico detalhado com as funcionalidades ideais que esse app deve ter. Retorne apenas o escopo direto, sem introduções ou saudações.`;
-
-        const responseM1 = await fetch(API_URL, {
+        // ETAPA 2: Aciona a API com a estrutura complexa
+        const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: promptInstrucaoM1 }] }] })
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: promptFinal }] }]
+            })
         });
 
-        if (!responseM1.ok) throw new Error("Erro ao gerar o primeiro prompt.");
-        const dataM1 = await responseM1.json();
-        const promptOtimizadoM1 = dataM1.candidates[0].content.parts[0].text.trim();
-
-        // Alimenta a Aba 1
-        document.getElementById('output-prompt').value = promptOtimizadoM1;
-
-        // Pausa dramática para o usuário conseguir ver o prompt criado
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        // ==========================================================
-        // MOTOR 2: ENVELOPAMENTO SÊNIOR E CONSTRUÇÃO DO CÓDIGO
-        // ==========================================================
-        btn.innerText = "Aplicando Engenharia Sênior... 🧠";
-        statusIndicator.innerText = "Fase 2: Aplicando padrões Big Tech e autocorreção...";
-        switchTab('advanced');
-
-        // Suas 10 Regras Rígidas de Engenharia Comercial
-        let regrasSenior = `
-        Aja como um Engenheiro de Software Sênior e Especialista em UX/UI das maiores Big Techs (Google, Apple, Notion, Figma).
-        SIGA OBRIGATORIAMENTE ESTE PROCESSO MENTAL ANTES DE DEVOLVER O CÓDIGO:
-        1. Entenda perfeitamente o escopo solicitado.
-        2. Planeje toda a arquitetura interna de software.
-        3. Escolha os melhores componentes interativos.
-        4. Projete um layout moderno baseado em Visual Hierarchy, Spacing equilibrado, White Space elegante, Microinterações e Motion Design premium.
-        5. Crie soluções modulares separando a lógica internamente mesmo em arquivo único: [Config, Utils, Components, Services, State, Events, UI, Storage].
-        6. SEMPRE implemente componentes Premium funcionais se fizerem sentido: Toasts dinâmicos, Modais, Dropdowns, Tooltips, Accordions ou filtros avançados.
-        7. REGRA ABSOLUTA: Não use soluções improvisadas ou dados fictícios estáticos desnecessários. Tudo deve funcionar de verdade em nível de produção.
-        8. Aplique Clean Code rígido: Nomes de variáveis explícitos, sem código morto e sem duplicação de CSS/JS.
-        9. SISTEMA DE AUTOCORREÇÃO: Antes de finalizar, faça uma varredura interna e revise procurando por bugs, IDs quebrados, erros de console ou falhas de responsividade. Corrija tudo.
-        10. Devolva UNICAMENTE o código final purificado dentro de um bloco de código markdown \`\`\`html, sem textos conversacionais fora dele.
-        `;
-
-        let promptFinalM2 = "";
-        if (codigoAtual === "") {
-            promptFinalM2 = `${regrasSenior}\n\nTarefa: Com base no seguinte escopo avançado, crie o aplicativo completo do zero:\n${promptOtimizadoM1}`;
-        } else {
-            promptFinalM2 = `${regrasSenior}\n\nCódigo atual:\n\`\`\`html\n${codigoAtual}\n\`\`\`\n\nTarefa: Modifique ou acrescente novas camadas profissionais a este código respeitando a base existente para realizar este pedido:\n${promptOtimizadoM1}`;
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error?.message || "Falha ao processar os tokens.");
         }
 
-        // Mostra o prompt avançado consolidado na Aba 2
-        document.getElementById('output-advanced').value = promptFinalM2;
+        const data = await response.json();
+        let resultadoTexto = data.candidates[0].content.parts[0].text;
 
-        // Pausa para visualização da transição
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Limpeza dos blocos markdown para extrair código de execução limpo
+        resultadoTexto = resultadoTexto.replace(/```html/gi, "").replace(/```/gi, "").trim();
 
-        btn.innerText = "Fabricando Aplicativo... 🚀";
-        statusIndicator.innerText = "Fase 3: Executando compilação final...";
-        switchTab('code');
-
-        const responseM2 = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: promptFinalM2 }] }] })
-        });
-
-        if (!responseM2.ok) throw new Error("Erro ao compilar o código do aplicativo.");
-        const dataM2 = await responseM2.json();
-        let codigoGerado = dataM2.candidates[0].content.parts[0].text;
-
-        // Limpeza dos marcadores Markdown
-        codigoGerado = codigoGerado.replace(/```html/gi, "").replace(/```/gi, "").trim();
-
-        // Alimenta e atualiza os resultados na Aba 3 e no Iframe
-        codigoAtual = codigoGerado;
+        // ETAPA 3: Atualiza código fonte na aba e atualiza o PREVIEW instantaneamente
+        codigoAtual = resultadoTexto;
         document.getElementById('output-code').value = codigoAtual;
         document.getElementById('app-preview').srcdoc = codigoAtual;
 
-        statusIndicator.innerText = "Aplicativo renderizado com sucesso! ✓";
+        // Altera para a aba do código pronto na tela
+        switchTab('code');
         document.getElementById('user-input').value = "";
 
     } catch (error) {
         console.error(error);
-        statusIndicator.innerText = "Falha no processamento.";
-        alert(`Erro de Compilação: ${error.message}`);
+        alert(`Erro de Compilação da IA: ${error.message}`);
     } finally {
         btn.innerText = "Processar Aplicativo";
         btn.disabled = false;
@@ -128,6 +100,7 @@ document.getElementById('btn-generate').addEventListener('click', async () => {
 function changeDevice(device) {
     const simulator = document.getElementById('device-simulator');
     simulator.className = ''; 
+
     if (device === 'mobile') simulator.classList.add('device-mobile');
     if (device === 'tablet') simulator.classList.add('device-tablet');
     if (device === 'desktop') simulator.classList.add('device-desktop');
@@ -137,6 +110,7 @@ function toggleFullscreen() {
     const simulator = document.getElementById('device-simulator');
     const oldBtn = document.querySelector('.close-fs-btn');
     if (oldBtn) oldBtn.remove();
+
     simulator.classList.toggle('device-fullscreen');
 
     if (simulator.classList.contains('device-fullscreen')) {
@@ -151,32 +125,22 @@ function toggleFullscreen() {
     }
 }
 
-// Chaveador das 3 Abas
+// Chaveador de Abas Corrigido
 function switchTab(tabAlvo) {
     const btnPrompt = document.getElementById('tab-btn-prompt');
-    const btnAdvanced = document.getElementById('tab-btn-advanced');
     const btnCode = document.getElementById('tab-btn-code');
-
     const contentPrompt = document.getElementById('tab-content-prompt');
-    const contentAdvanced = document.getElementById('tab-content-advanced');
     const contentCode = document.getElementById('tab-content-code');
-
-    btnPrompt.classList.remove('active');
-    btnAdvanced.classList.remove('active');
-    btnCode.classList.remove('active');
-
-    contentPrompt.style.display = 'none';
-    contentAdvanced.style.display = 'none';
-    contentCode.style.display = 'none';
 
     if (tabAlvo === 'prompt') {
         btnPrompt.classList.add('active');
+        btnCode.classList.remove('active');
         contentPrompt.style.display = 'block';
-    } else if (tabAlvo === 'advanced') {
-        btnAdvanced.classList.add('active');
-        contentAdvanced.style.display = 'block';
-    } else if (tabAlvo === 'code') {
+        contentCode.style.display = 'none';
+    } else {
         btnCode.classList.add('active');
+        btnPrompt.classList.remove('active');
         contentCode.style.display = 'block';
+        contentPrompt.style.display = 'none';
     }
 }
