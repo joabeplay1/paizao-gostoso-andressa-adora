@@ -1,136 +1,134 @@
-// Base de dados simulada para rodar localmente no Preview de forma dinâmica
-const textosBiblicos = {
-    "salmos-1": [
-        "Bem-aventurado o homem que não anda segundo o conselho dos ímpios.",
-        "Antes tem o seu prazer na lei do Senhor, e na sua lei medita de dia e de noite.",
-        "Pois será como a árvore plantada junto a ribeiros de águas, a qual dá o seu fruto no seu tempo."
-    ],
-    "salmos-23": [
-        "O Senhor é o meu pastor, nada me faltará.",
-        "Deitar-me faz em verdes pastos, guia-me mansamente a águas tranquilas.",
-        "Refrigera a minha alma; guia-me pelas veredas da justiça, por amor do seu nome."
-    ],
-    "joao-1": [
-        "No princípio era o Verbo, e o Verbo estava com Deus, e o Verbo era Deus.",
-        "Ele estava no princípio com Deus.",
-        "Todas as coisas foram feitas por ele, e sem ele nada do que foi feito se fez."
-    ],
-    "joao-23": [
-        "Conteúdo demonstrativo para o capítulo selecionado."
-    ]
-};
+// Variável global para armazenar o estado atual do código criado
+let codigoAtual = "";
 
-// 1. Controle de Navegação entre Abas (Telas)
-function switchTab(screenId) {
-    // Esconder todas as telas
-    document.querySelectorAll('.app-screen').forEach(screen => {
-        screen.classList.remove('active');
-    });
-    // Desativar botões do menu
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
+// Carrega a chave salva do navegador ao iniciar
+document.addEventListener('DOMContentLoaded', () => {
+    const savedKey = localStorage.getItem('gemini_api_key');
+    if (savedKey) {
+        document.getElementById('api-key-input').value = savedKey;
+    }
+});
 
-    // Ativar a tela e o botão corretos
-    document.getElementById(`screen-${screenId}`).classList.add('active');
-    
-    // Encontrar o botão correspondente para dar feedback visual
-    const btnIndex = ['home', 'biblia', 'louvores', 'chat'].indexOf(screenId);
-    if(btnIndex !== -1) {
-        document.querySelectorAll('.nav-nav-btn, .nav-btn')[btnIndex].classList.add('active');
+document.getElementById('btn-generate').addEventListener('click', async () => {
+    const geminiKey = document.getElementById('api-key-input').value.trim();
+    const userInput = document.getElementById('user-input').value.trim();
+
+    if (!geminiKey || geminiKey.startsWith("http")) {
+        alert("Erro: Insira uma chave de API válida do Gemini (Ex: AIzaSy...). Não coloque links!");
+        return;
+    }
+    if (!userInput) {
+        alert("Por favor, digite o que deseja fazer no aplicativo.");
+        return;
     }
 
-    // Carregar conteúdo inicial se for a tela da Bíblia
-    if(screenId === 'biblia') {
-        renderBibleText();
-    }
-}
+    // Salva a chave válida localmente
+    localStorage.setItem('gemini_api_key', geminiKey);
 
-// 2. Lógica da Bíblia Dinâmica
-const bookSelect = document.getElementById('bible-book');
-const chapterSelect = document.getElementById('bible-chapter');
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+    const btn = document.getElementById('btn-generate');
+    btn.innerText = "Processando... ⏳";
+    btn.disabled = true;
 
-if(bookSelect && chapterSelect) {
-    bookSelect.addEventListener('change', renderBibleText);
-    chapterSelect.addEventListener('change', renderBibleText);
-}
-
-function renderBibleText() {
-    const book = bookSelect.value;
-    const chapter = chapterSelect.value;
-    const container = document.getElementById('bible-text');
-    
-    const chave = `${book}-${chapter}`;
-    const versiculos = textosBiblicos[chave] || ["Texto não disponível para esta simulação."];
-    
-    container.innerHTML = versiculos.map((v, i) => `
-        <div class="verse"><span class="verse-num">${i + 1}</span>${v}</div>
-    `).join('');
-}
-
-// 3. Lógica do Player de Louvores (Simulado)
-function playMusic(title, artist) {
-    const player = document.getElementById('player');
-    document.getElementById('player-title').innerText = title;
-    document.getElementById('player-artist').innerText = artist;
-    player.classList.remove('hidden');
-    document.getElementById('play-icon').className = "fa-solid fa-pause";
-}
-
-function togglePlay() {
-    const icon = document.getElementById('play-icon');
-    if(icon.classList.contains('fa-pause')) {
-        icon.className = "fa-solid fa-play";
+    // Montagem inteligente do Prompt baseado no estado atual da aplicação
+    let promptFinal = "";
+    if (codigoAtual === "") {
+        // Fluxo Inicial: Criar um app do zero
+        promptFinal = `Você é uma IA programadora especialista. Crie um aplicativo de página única (Single Page Application) completo com base no seguinte pedido: "${userInput}". Regras estritas: Devolva APENAS o código HTML funcional com estilos CSS embutidos na tag <style> e lógicas JavaScript embutidas na tag <script>. Não inclua explicações em texto nem introduções. Envolva o resultado estritamente em um bloco de código markdown \`\`\`html.`;
     } else {
-        icon.className = "fa-solid fa-pause";
+        // Fluxo de Atualização: Editar o app sem recomeçar do zero
+        promptFinal = `Você é uma IA programadora especialista. Atualmente, o código do aplicativo é este: \n\n${codigoAtual}\n\nO usuário quer fazer a seguinte alteração/melhoria: "${userInput}". Modifique o código atual para realizar o pedido. Regras estritas: Retorne o código HTML modificado por completo. Não forneça trechos parciais, explicações em texto ou comentários sobre o que foi alterado. Retorne APENAS o código completo envolvido em bloco de código markdown \`\`\`html.`;
+    }
+
+    // Exibe o prompt gerado na aba lateral
+    document.getElementById('output-prompt').value = promptFinal;
+    switchTab('prompt');
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: promptFinal }] }]
+            })
+        });
+
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error?.message || "Falha na requisição.");
+        }
+
+        const data = await response.json();
+        let resultadoTexto = data.candidates[0].content.parts[0].text;
+
+        // Limpa blocos de formatação markdown (```html) para obter código puro
+        resultadoTexto = resultadoTexto.replace(/```html/gi, "").replace(/```/gi, "").trim();
+
+        // Atualiza as referências locais e visuais
+        codigoAtual = resultadoTexto;
+        document.getElementById('output-code').value = codigoAtual;
+
+        // Injeta o código dinamicamente no iframe
+        document.getElementById('app-preview').srcdoc = codigoAtual;
+
+        // Exibe a aba de código automaticamente ao finalizar
+        switchTab('code');
+        document.getElementById('user-input').value = ""; // Limpa a entrada para o próximo comando
+
+    } catch (error) {
+        console.error(error);
+        alert(`Erro técnico: ${error.message}`);
+    } finally {
+        btn.innerText = "Processar Aplicativo";
+        btn.disabled = false;
+    }
+});
+
+// Manipuladores de tamanho dos dispositivos
+function changeDevice(device) {
+    const simulator = document.getElementById('device-simulator');
+    simulator.className = ''; 
+
+    if (device === 'mobile') simulator.classList.add('device-mobile');
+    if (device === 'tablet') simulator.classList.add('device-tablet');
+    if (device === 'desktop') simulator.classList.add('device-desktop');
+}
+
+function toggleFullscreen() {
+    const simulator = document.getElementById('device-simulator');
+    const oldBtn = document.querySelector('.close-fs-btn');
+    if (oldBtn) oldBtn.remove();
+
+    simulator.classList.toggle('device-fullscreen');
+
+    if (simulator.classList.contains('device-fullscreen')) {
+        const closeBtn = document.createElement('button');
+        closeBtn.innerText = "❌ Sair da Tela Cheia";
+        closeBtn.className = 'close-fs-btn';
+        closeBtn.onclick = () => {
+            simulator.classList.remove('device-fullscreen');
+            closeBtn.remove();
+        };
+        document.body.appendChild(closeBtn);
     }
 }
 
-// 4. Lógica de Mensagens do Chat
-const chatInput = document.getElementById('chat-input');
-const chatSend = document.getElementById('chat-send');
-const chatMessages = document.getElementById('chat-messages');
+// Chaveador das abas (Corrigido para evitar o erro .nav-nav-btn do arquivo original)
+function switchTab(tabAlvo) {
+    const btnPrompt = document.getElementById('tab-btn-prompt');
+    const btnCode = document.getElementById('tab-btn-code');
+    const contentPrompt = document.getElementById('tab-content-prompt');
+    const contentCode = document.getElementById('tab-content-code');
 
-if(chatSend && chatInput) {
-    chatSend.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendMessage();
-    });
-}
-
-function sendMessage() {
-    const text = chatInput.value.trim();
-    if(text === "") return;
-
-    // Adiciona mensagem do usuário
-    const msgDiv = document.createElement('div');
-    msgDiv.className = "message user";
-    msgDiv.innerText = text;
-    chatMessages.appendChild(msgDiv);
-    
-    chatInput.value = "";
-    chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll para baixo
-
-    // Resposta automática da IA/Igreja simulando interação após 1.5s
-    setTimeout(() => {
-        const replyDiv = document.createElement('div');
-        replyDiv.className = "message";
-        replyDiv.innerText = "Amém! Que Deus abençoe o seu dia e ouça a sua prece.";
-        chatMessages.appendChild(replyDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 1500);
-}
-
-// 5. Controle do Modal de Login
-const loginBtn = document.getElementById('login-btn');
-const loginModal = document.getElementById('login-modal');
-
-if(loginBtn) {
-    loginBtn.addEventListener('click', () => {
-        loginModal.classList.remove('hidden');
-    });
-}
-
-function closeLogin() {
-    loginModal.classList.add('hidden');
+    if (tabAlvo === 'prompt') {
+        btnPrompt.classList.add('active');
+        btnCode.classList.remove('active');
+        contentPrompt.style.display = 'block';
+        contentCode.style.display = 'none';
+    } else {
+        btnCode.classList.add('active');
+        btnPrompt.classList.remove('active');
+        contentCode.style.display = 'block';
+        contentPrompt.style.display = 'none';
+    }
 }
