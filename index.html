@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criador de Apps Profissionais v3.0</title>
+    <title>Criador Automático de Apps</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="container">
         <aside class="sidebar">
-            <h2>Criador de Apps Premium</h2>
+            <h2>Criador de Apps v2.5</h2>
             
             <div class="api-key-container">
                 <label for="api-key-input">Chave API Gemini (AIzaSy...):</label>
@@ -18,8 +18,8 @@
             </div>
 
             <div class="input-container">
-                <label for="user-input">Descreva sua ideia ou alteração:</label>
-                <textarea id="user-input" placeholder="Ex: Crie um dashboard financeiro completo com gráficos e notificações de transações..."></textarea>
+                <label for="user-input">O que você quer criar ou alterar?</label>
+                <textarea id="user-input" placeholder="Ex: Crie um app de tarefas... ou depois: Mude o fundo para azul..."></textarea>
             </div>
             
             <button id="btn-generate">Processar Aplicativo</button>
@@ -27,15 +27,15 @@
             <hr class="divider">
 
             <div class="tabs">
-                <button id="tab-btn-prompt" class="nav-btn active" onclick="switchTab('prompt')">Prompt Avançado</button>
+                <button id="tab-btn-prompt" class="nav-btn active" onclick="switchTab('prompt')">Prompt</button>
                 <button id="tab-btn-code" class="nav-btn" onclick="switchTab('code')">Código Fonte</button>
             </div>
             
             <div id="tab-content-prompt" class="tab-content">
-                <textarea id="output-prompt" readonly placeholder="O pipeline de engenharia de prompt aparecerá aqui..."></textarea>
+                <textarea id="output-prompt" readonly placeholder="O prompt interno gerado aparecerá aqui..."></textarea>
             </div>
             <div id="tab-content-code" class="tab-content" style="display:none;">
-                <textarea id="output-code" readonly placeholder="O código de produção gerado aparecerá aqui..."></textarea>
+                <textarea id="output-code" readonly placeholder="O código HTML gerado aparecerá aqui..."></textarea>
             </div>
         </aside>
 
@@ -48,7 +48,7 @@
             </div>
 
             <div id="device-simulator" class="device-desktop">
-                <iframe id="app-preview" srcdoc="<div style='font-family:sans-serif; text-align:center; padding-top:120px; color:#a6adc8;'><h2>Ambiente Pronto</h2><p>Insira suas instruções para iniciar a engenharia de código.</p></div>"></iframe>
+                <iframe id="app-preview" srcdoc="<div style='font-family:sans-serif; text-align:center; padding-top:100px; color:#888;'><h2>Pronto para começar</h2><p>Digite sua ideia ao lado e clique em Processar.</p></div>"></iframe>
             </div>
         </main>
     </div>
