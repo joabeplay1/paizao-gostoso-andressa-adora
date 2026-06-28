@@ -1,5 +1,7 @@
+// Variável global para armazenar o estado atual do código criado
 let codigoAtual = "";
 
+// Carrega a chave salva do navegador ao iniciar
 document.addEventListener('DOMContentLoaded', () => {
     const savedKey = localStorage.getItem('gemini_api_key');
     if (savedKey) {
@@ -12,53 +14,37 @@ document.getElementById('btn-generate').addEventListener('click', async () => {
     const userInput = document.getElementById('user-input').value.trim();
 
     if (!geminiKey || geminiKey.startsWith("http")) {
-        alert("Erro: Insira uma chave de API válida do Gemini (Ex: AIzaSy...).");
+        alert("Erro: Insira uma chave de API válida do Gemini (Ex: AIzaSy...). Não coloque links!");
         return;
     }
     if (!userInput) {
-        alert("Por favor, digite uma instrução para criar ou alterar o app.");
+        alert("Por favor, digite o que deseja fazer no aplicativo.");
         return;
     }
 
+    // Salva a chave válida localmente
     localStorage.setItem('gemini_api_key', geminiKey);
+
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
-    
     const btn = document.getElementById('btn-generate');
-    btn.innerText = "Pensando e Revisando... ⏳";
+    btn.innerText = "Processando... ⏳";
     btn.disabled = true;
 
-    // INJEÇÃO DAS 12 REGRAS DE SOFTWARE COMERCIAL DIRETAMENTE NO PROMPT INTERNO
-    let instrucoesAvançadas = `
-    Aja como um Engenheiro de Software Sênior e Especialista em UX/UI das maiores Big Techs (Google, Apple, Notion, Figma).
-    
-    SIGA OBRIGATORIAMENTE ESTE PROCESSO MENTAL ANTES DE DEVOLVER O CÓDIGO:
-    1. Entenda perfeitamente o pedido do usuário.
-    2. Planeje toda a arquitetura interna de software.
-    3. Escolha os melhores componentes interativos.
-    4. Projete um layout moderno baseado em Visual Hierarchy, Spacing equilibrado, White Space elegante, Microinterações e Motion Design premium (estilo Apple Human Interface e Glass UI).
-    5. Crie soluções modulares separando a lógica internamente mesmo em arquivo único: [Config, Utils, Components, Services, State, Events, UI, Storage].
-    6. SEMPRE implemente componentes Premium funcionais se fizerem sentido para a experiência: Toasts dinâmicos, Modais, Dialogs, Dropdowns, Tooltips, Accordions, Skeletons de carregamento ou filtros avançados.
-    7. REGRA ABSOLUTA: Não use soluções improvisadas, placeholders ou dados fictícios estáticos desnecessários. Tudo deve funcionar de verdade em nível de produção (botões, lógicas, submissões e persistências).
-    8. Aplique Clean Code rígido: Nomes de variáveis explícitos, sem código morto e sem duplicação de CSS/JS.
-    9. SISTEMA DE AUTOCORREÇÃO: Antes de finalizar, faça uma varredura interna e revise procurando por bugs, IDs quebrados, erros de console, falhas de responsividade em dispositivos móveis ou problemas de acessibilidade. Corrija tudo internamente.
-    10. Devolva UNICAMENTE o código final purificado dentro de um bloco de código markdown \`\`\`html, sem textos conversacionais fora dele.
-    `;
-
+    // Montagem inteligente do Prompt baseado no estado atual da aplicação
     let promptFinal = "";
     if (codigoAtual === "") {
-        // Fluxo Inicial
-        promptFinal = `${instrucoesAvançadas}\n\nTarefa: Crie um aplicativo web inovador do zero baseado em: "${userInput}".`;
+        // Fluxo Inicial: Criar um app do zero
+        promptFinal = `Você é uma IA programadora especialista. Crie um aplicativo de página única (Single Page Application) completo com base no seguinte pedido: "${userInput}". Regras estritas: Devolva APENAS o código HTML funcional com estilos CSS embutidos na tag <style> e lógicas JavaScript embutidas na tag <script>. Não inclua explicações em texto nem introduções. Envolva o resultado estritamente em um bloco de código markdown \`\`\`html.`;
     } else {
-        // Fluxo de Atualização / Manutenção Dinâmica
-        promptFinal = `${instrucoesAvançadas}\n\nCódigo de produção atual:\n\`\`\`html\n${codigoAtual}\n\`\`\`\n\nTarefa: Modifique ou acrescente novas camadas profissionais a este código respeitando a base existente para realizar este pedido: "${userInput}". Não envie trechos soltos, refaça o arquivo HTML completo contendo as mudanças aplicadas e revisadas.`;
+        // Fluxo de Atualização: Editar o app sem recomeçar do zero
+        promptFinal = `Você é uma IA programadora especialista. Atualmente, o código do aplicativo é este: \n\n${codigoAtual}\n\nO usuário quer fazer a seguinte alteração/melhoria: "${userInput}". Modifique o código atual para realizar o pedido. Regras estritas: Retorne o código HTML modificado por completo. Não forneça trechos parciais, explicações em texto ou comentários sobre o que foi alterado. Retorne APENAS o código completo envolvido em bloco de código markdown \`\`\`html.`;
     }
 
-    // ETAPA 1: Mostra o Prompt Avançado gerado na aba lateral automaticamente
+    // Exibe o prompt gerado na aba lateral
     document.getElementById('output-prompt').value = promptFinal;
     switchTab('prompt');
 
     try {
-        // ETAPA 2: Aciona a API com a estrutura complexa
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -69,34 +55,36 @@ document.getElementById('btn-generate').addEventListener('click', async () => {
 
         if (!response.ok) {
             const errData = await response.json();
-            throw new Error(errData.error?.message || "Falha ao processar os tokens.");
+            throw new Error(errData.error?.message || "Falha na requisição.");
         }
 
         const data = await response.json();
         let resultadoTexto = data.candidates[0].content.parts[0].text;
 
-        // Limpeza dos blocos markdown para extrair código de execução limpo
+        // Limpa blocos de formatação markdown (```html) para obter código puro
         resultadoTexto = resultadoTexto.replace(/```html/gi, "").replace(/```/gi, "").trim();
 
-        // ETAPA 3: Atualiza código fonte na aba e atualiza o PREVIEW instantaneamente
+        // Atualiza as referências locais e visuais
         codigoAtual = resultadoTexto;
         document.getElementById('output-code').value = codigoAtual;
+
+        // Injeta o código dinamicamente no iframe
         document.getElementById('app-preview').srcdoc = codigoAtual;
 
-        // Altera para a aba do código pronto na tela
+        // Exibe a aba de código automaticamente ao finalizar
         switchTab('code');
-        document.getElementById('user-input').value = "";
+        document.getElementById('user-input').value = ""; // Limpa a entrada para o próximo comando
 
     } catch (error) {
         console.error(error);
-        alert(`Erro de Compilação da IA: ${error.message}`);
+        alert(`Erro técnico: ${error.message}`);
     } finally {
         btn.innerText = "Processar Aplicativo";
         btn.disabled = false;
     }
 });
 
-// Controles de Dispositivos e Tela
+// Manipuladores de tamanho dos dispositivos
 function changeDevice(device) {
     const simulator = document.getElementById('device-simulator');
     simulator.className = ''; 
@@ -125,7 +113,7 @@ function toggleFullscreen() {
     }
 }
 
-// Chaveador de Abas Corrigido
+// Chaveador das abas (Corrigido para evitar o erro .nav-nav-btn do arquivo original)
 function switchTab(tabAlvo) {
     const btnPrompt = document.getElementById('tab-btn-prompt');
     const btnCode = document.getElementById('tab-btn-code');
