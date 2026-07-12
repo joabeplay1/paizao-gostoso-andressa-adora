@@ -1,0 +1,30 @@
+{
+  "name": "internet-share-pro",
+  "version": "1.0.0",
+  "description": "Compartilhar internet do PC para Android",
+  "main": "main.js",
+  "author": "Joab",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "adbkit": "^2.12.1",
+    "electron-store": "^8.1.0",
+    "node-fetch": "^3.3.2",
+    "systeminformation": "^5.23.7"
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.jbplay.internetsharepro",
+    "productName": "Internet Share Pro",
+    "win": {
+      "target": "nsis"
+    }
+  }
+}
