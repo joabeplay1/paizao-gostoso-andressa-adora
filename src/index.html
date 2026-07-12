@@ -1,0 +1,168 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Internet Share Pro</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">
+
+🌐 Internet Share Pro
+
+</div>
+
+<div class="status">
+
+<span id="internetStatus">
+
+🔴 Sem Internet
+
+</span>
+
+</div>
+
+</header>
+
+<div class="container">
+
+<div class="card">
+
+<h2>Computador</h2>
+
+<p id="pcName">Detectando...</p>
+
+<p id="pcIp">IP: --</p>
+
+</div>
+
+<div class="card">
+
+<h2>Celular</h2>
+
+<p id="deviceName">Nenhum conectado</p>
+
+<p id="androidVersion">Android --</p>
+
+<p id="battery">Bateria --</p>
+
+</div>
+
+<div class="card">
+
+<h2>Conexão</h2>
+
+<p id="usbStatus">
+
+USB:
+
+<span class="red">
+
+Desconectado
+
+</span>
+
+</p>
+
+<p id="bluetoothStatus">
+
+Bluetooth:
+
+<span class="red">
+
+Desligado
+
+</span>
+
+</p>
+
+</div>
+
+<div class="buttons">
+
+<button id="scanUSB">
+
+🔌 Procurar USB
+
+</button>
+
+<button id="scanBluetooth">
+
+🔵 Procurar Bluetooth
+
+</button>
+
+<button id="shareInternet">
+
+🚀 Compartilhar Internet
+
+</button>
+
+<button id="stopShare">
+
+🛑 Parar Compartilhamento
+
+</button>
+
+</div>
+
+<div class="speed">
+
+<h2>Velocidade</h2>
+
+<p>
+
+Download
+
+<span id="download">
+
+0 MB/s
+
+</span>
+
+</p>
+
+<p>
+
+Upload
+
+<span id="upload">
+
+0 MB/s
+
+</span>
+
+</p>
+
+</div>
+
+<div class="logs">
+
+<h2>Logs</h2>
+
+<textarea
+id="logs"
+readonly></textarea>
+
+</div>
+
+</div>
+
+<script src="renderer.js"></script>
+
+</body>
+</html>
+```
